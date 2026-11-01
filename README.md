@@ -9,6 +9,7 @@
 Drop in a Fabric mod `.jar`, get a feasibility report, candidate Horizon targets, and a ready-to-check `horizon-mixins` bundle.
 
 Made by **melthedev** 
+
 [![Support me on ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J7L822JO4Y)
 
 </div>
