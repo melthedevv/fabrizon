@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 src/fabrizon/__init__.py
 src/fabrizon/__main__.py
+src/fabrizon/ai_translate.py
 src/fabrizon/analysis.py
 src/fabrizon/classfile.py
 src/fabrizon/cli.py

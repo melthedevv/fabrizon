@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from . import __version__
@@ -45,6 +46,11 @@ def main(argv: list[str] | None = None) -> int:
     ge.add_argument("--compatibility", help="compatibility.json to take game/revisions/hooks from")
     ge.add_argument("--mixins-revision", help="exact 40-char horizon-mixins commit for the .hnmod")
     ge.add_argument("--hooks", type=int, help="NATIVE_HOOKS_API the mod needs (default: the checkout's)")
+    # AI-assisted translation options
+    ge.add_argument("--ai-api-key", help="NVIDIA API key for AI-assisted translation (or set FABRIZON_NVIDIA_API_KEY env)")
+    ge.add_argument("--ai-base-url", default="https://integrate.api.nvidia.com/v1", help="OpenAI-compatible API base URL")
+    ge.add_argument("--ai-model", default="nvidia/nemotron-3-ultra-550b-a55b", help="Model name for AI translation")
+    ge.add_argument("--ai-config", help="JSON file with ai_api_key, base_url, model, temperature, max_tokens")
 
     pk = sub.add_parser("package", help="stage 5: package a bundle folder as a deterministic .hnmod")
     pk.add_argument("bundle", help="folder containing horizon-mixin.toml")
@@ -82,7 +88,29 @@ def main(argv: list[str] | None = None) -> int:
             report = analyze(jar)
             maps = load_tiny(args.mappings) if args.mappings else None
             rs = resolve(report, index_tree(args.horizon), maps, args.to)
-            b = generate(report, rs, args.crate, args.revision, jar)
+
+            # Build AI config if provided
+            ai_config = None
+            if args.ai_config:
+                try:
+                    from .ai_translate import AIConfig
+                    ai_config = AIConfig.from_file(args.ai_config)
+                except Exception as e:
+                    print(f"fabrizon: failed to load AI config: {e}", file=sys.stderr)
+                    return 2
+            elif args.ai_api_key or os.environ.get("FABRIZON_NVIDIA_API_KEY") or os.environ.get("NVIDIA_API_KEY"):
+                try:
+                    from .ai_translate import AIConfig
+                    ai_config = AIConfig(
+                        api_key=args.ai_api_key or os.environ.get("FABRIZON_NVIDIA_API_KEY") or os.environ.get("NVIDIA_API_KEY") or "",
+                        base_url=args.ai_base_url,
+                        model=args.ai_model,
+                    )
+                except Exception as e:
+                    print(f"fabrizon: failed to create AI config: {e}", file=sys.stderr)
+                    return 2
+
+            b = generate(report, rs, args.crate, args.revision, jar, ai_config)
             paths = write_bundle(b, args.out)
             packed = None
             if args.hnmod:

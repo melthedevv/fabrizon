@@ -22,6 +22,10 @@ from dataclasses import dataclass, field
 from .analysis import Report
 from .resolve import Resolution
 from .translate import AI_NOTE, Helper, build_helper, render_brief
+try:
+    from .ai_translate import AIConfig
+except Exception:
+    AIConfig = None  # type: ignore
 
 KIND_RESTRICTION = {
     "HEAD": None,
@@ -73,7 +77,8 @@ class Bundle:
 
 
 def generate(report: Report, resolutions: list[Resolution], crate: str,
-             horizon_revision: str | None = None, jar=None) -> Bundle:
+             horizon_revision: str | None = None, jar=None,
+             ai_config: "AIConfig | None" = None) -> Bundle:
     b = Bundle()
     mod_id = _slug(report.mod_id)
     toml = ["[mod]", f"id = {_q(mod_id)}",
@@ -95,7 +100,7 @@ def generate(report: Report, resolutions: list[Resolution], crate: str,
             b.todo.append(f"- [{r.kind or 'no kind'}] {label}: needs a hand-written injection "
                           f"(target `{tid}`): {restriction}.")
             continue
-        helper = build_helper(r, jar, crate)
+        helper = build_helper(r, jar, crate, ai_config)
         if helper is None:
             b.todo.append(f"- [{r.kind}] {label}: could not read the handler body; write it by hand.")
             continue
