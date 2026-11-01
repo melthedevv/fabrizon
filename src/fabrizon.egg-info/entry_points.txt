@@ -1,0 +1,2 @@
+[console_scripts]
+fabrizon = fabrizon.cli:main

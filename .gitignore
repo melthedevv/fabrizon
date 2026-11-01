@@ -1,6 +1,22 @@
+# Local scripts
+push to github.bat
+
+# Python
 __pycache__/
-*.pyc
-*.egg-info/
-dist/
-build/
-.venv/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
