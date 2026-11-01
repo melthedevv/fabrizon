@@ -360,7 +360,7 @@ footer a{font-weight:600}
   <div class="logo">F</div>
   <div>
     <h1>Fabrizon</h1>
-    <div class="sub">Translate Fabric mods for Horizon \u00b7 unofficial</div>
+    <div class="sub">Translate Fabric mods for Horizon · unofficial</div>
   </div>
   <div class="spacer"></div>
   <span class="version-badge" id="versionBadge">v0.0.0</span>
@@ -373,7 +373,7 @@ footer a{font-weight:600}
 <div id="dropSection">
   <div id="drop" class="drop" role="button" tabindex="0" aria-label="Choose a Fabric mod jar">
     <b>Drop a Fabric mod <code>.jar</code> here</b>
-    <span>or click to choose \u00b7 files never leave your computer</span>
+    <span>or click to choose · files never leave your computer</span>
     <input id="fileInput" type="file" accept=".jar,.zip" class="hide" aria-hidden="true">
   </div>
 </div>
@@ -390,10 +390,10 @@ footer a{font-weight:600}
 
 <div id="main" class="hide">
   <div class="tabs" role="tablist" aria-label="Pipeline steps">
-    <div class="tab on" data-t="analyze" role="tab" aria-selected="true">1 \u00b7 Analyze</div>
-    <div class="tab" data-t="resolve" role="tab" aria-selected="false">2 \u00b7 Resolve</div>
-    <div class="tab" data-t="generate" role="tab" aria-selected="false">3 \u00b7 Generate</div>
-    <div class="tab" data-t="settings" role="tab" aria-selected="false">\u2699 Settings</div>
+    <div class="tab on" data-t="analyze" role="tab" aria-selected="true">1 · Analyze</div>
+    <div class="tab" data-t="resolve" role="tab" aria-selected="false">2 · Resolve</div>
+    <div class="tab" data-t="generate" role="tab" aria-selected="false">3 · Generate</div>
+    <div class="tab" data-t="settings" role="tab" aria-selected="false">⚙ Settings</div>
   </div>
 
   <!-- Step 1: Analyze -->
@@ -410,7 +410,7 @@ footer a{font-weight:600}
     <div class="card">
       <label>Mappings file <span class="hint">Tiny v1/v2 (intermediary or Yarn), <code>.tiny</code> or <code>.gz</code>. Needed when the jar uses <code>class_1234</code> style names.</span></label>
       <div class="row" style="gap:10px; flex-wrap:wrap; align-items:center">
-        <button class="btn ghost" id="pickMap" style="white-space:nowrap">Choose mappings\u2026</button>
+        <button class="btn ghost" id="pickMap" style="white-space:nowrap">Choose mappings…</button>
         <span class="note" id="mapName" style="flex:1; min-width:180px; text-align:center; padding:12px">none selected</span>
         <input id="mapFile" type="file" accept=".tiny,.gz" class="hide" aria-hidden="true">
       </div>
@@ -458,7 +458,7 @@ footer a{font-weight:600}
       <div class="grid" style="margin-top:8px">
         <div>
           <label>API Key <span class="hint">NVIDIA / OpenAI-compatible key.</span></label>
-          <input type="password" id="aiKey" placeholder="nvapi-\u2026 or sk-\u2026" style="max-width:320px">
+          <input type="password" id="aiKey" placeholder="nvapi-… or sk-…" style="max-width:320px">
         </div>
         <div>
           <label>Base URL <span class="hint">Default: NVIDIA API.</span></label>
@@ -483,7 +483,7 @@ footer a{font-weight:600}
         <h3>AI Translation</h3>
         <div class="setting-row">
           <label>API Key <span class="hint">NVIDIA / OpenAI-compatible key. Also set via <code>FABRIZON_NVIDIA_API_KEY</code> env var.</span></label>
-          <input type="password" id="aiKey" placeholder="nvapi\u2026 or sk\u2026" autocomplete="off">
+          <input type="password" id="aiKey" placeholder="nvapi… or sk…" autocomplete="off">
         </div>
         <div class="setting-row">
           <label>Base URL <span class="hint">Default: NVIDIA API.</span></label>
@@ -526,7 +526,7 @@ footer a{font-weight:600}
 </div>
 
 <footer>
-  Made by <b>melthedev</b> \u00b7 <a href="https://ko-fi.com/melthedev" target="_blank" rel="noopener">Support on Ko-fi</a><br>
+  Made by <b>melthedev</b> · <a href="https://ko-fi.com/melthedev" target="_blank" rel="noopener">Support on Ko-fi</a><br>
   Not affiliated with the Horizon project, Mojang or Microsoft.
   Results are candidates: run <code>horizon-mixins plan</code> and <code>check</code> on the pinned Horizon source before trusting a bundle.
 </footer>
@@ -675,7 +675,7 @@ async function testAiConnection(){
   const base = $('aiBase').value.trim() || 'https://integrate.api.nvidia.com/v1';
   const model = $('aiModel').value.trim() || 'nvidia/nemotron-3-ultra-550b-a55b';
   if(!key){ status.textContent='Enter API key first'; status.className='status-indicator warn'; status.classList.remove('hide'); return; }
-  busy(btn, true, 'Testing\u2026');
+  busy(btn, true, 'Testing…');
   status.classList.add('hide');
   try{
     const r = await fetch(base + '/models', {headers:{'Authorization':'Bearer '+key}});
@@ -712,7 +712,7 @@ function clearResults(){
 
 /* ===== Step 1: Analyze ===== */
 async function runAnalyze(){
-  err(''); busy($('runAnalyze'), true, 'Analyzing\u2026');
+  err(''); busy($('runAnalyze'), true, 'Analyzing…');
   try{
     const r = await api('/api/analyze', {method:'POST', body:JSON.stringify({id:jarId})});
     lastAnalyze = r; renderAnalyze(r); $('exportAnalyze').classList.remove('hide');
@@ -732,9 +732,9 @@ function renderAnalyze(r){
         <div>License</div><div>${esc(typeof r.license==='object'?JSON.stringify(r.license):r.license||'not declared')}</div>
         <div>Authors</div><div>${esc((r.authors||[]).join(', ')||'unknown')}</div>
         <div>Classes</div><div>${r.class_count} (${r.mixin_class_count} mixin classes)</div>
-        <div>Sides</div><div>common ${r.sides.common} \u00b7 client ${r.sides.client} \u00b7 server ${r.sides.server}</div>
+        <div>Sides</div><div>common ${r.sides.common} · client ${r.sides.client} · server ${r.sides.server}</div>
         <div>Content</div><div>${r.asset_files} assets, ${r.data_files} data files</div>
-        <div>Names</div><div>${r.intermediary_names?'<span class="badge b-review">intermediary \u2014 needs mappings in step 2</span>':'readable'}</div>
+        <div>Names</div><div>${r.intermediary_names?'<span class="badge b-review">intermediary — needs mappings in step 2</span>':'readable'}</div>
       </div>
     </div>
     <div class="grid">
@@ -757,7 +757,7 @@ function renderAnalyze(r){
       const selectors = (x.selectors||[]).join(', ') || '-';
       h += `<tr>
         <td><span class="badge b-${x.status}">${x.status}</span></td>
-        <td class="mono">${esc(mixinShort)}<br><span class="note">${esc(x.member)} \u00b7 ${esc(x.annotation)} \u00b7 ${esc(x.side)}</span></td>
+        <td class="mono">${esc(mixinShort)}<br><span class="note">${esc(x.member)} · ${esc(x.annotation)} · ${esc(x.side)}</span></td>
         <td class="mono">${esc(targets)}<br><span class="note">${esc(selectors)}</span></td>
         <td>${esc(x.horizon||'-')}</td>
         <td class="note" style="max-width:280px">${esc(x.note)}</td>
@@ -780,7 +780,7 @@ function renderAnalyze(r){
 
 /* ===== Step 2: Resolve ===== */
 $('runResolve').onclick = async () => {
-  err(''); busy($('runResolve'), true, 'Resolving\u2026');
+  err(''); busy($('runResolve'), true, 'Resolving…');
   try{
     const r = await api('/api/resolve', {method:'POST', body:JSON.stringify({
       id:jarId, map_id:mapId, horizon:$('horizon').value.trim(), to:$('ns').value.trim()||'named'
@@ -814,10 +814,10 @@ function renderResolve(rs){
         <span class="badge b-${x.status}">${x.status}</span>
         <div style="flex:1; min-width:200px">
           <b class="mono">${esc(mixinShort)}</b>
-          <span class="note">@${esc(x.annotation)} \u00b7 ${esc(x.side)}</span>
+          <span class="note">@${esc(x.annotation)} · ${esc(x.side)}</span>
         </div>
       </div>
-      <div class="mono" style="margin-top:8px">${esc(x.java_target.split('/').pop())}#${esc(x.java_method)}${x.readable_target?' \u2192 '+esc(x.readable_target.split('/').pop())+'#'+esc(x.readable_method||''):''}</div>
+      <div class="mono" style="margin-top:8px">${esc(x.java_target.split('/').pop())}#${esc(x.java_method)}${x.readable_target?' → '+esc(x.readable_target.split('/').pop())+'#'+esc(x.readable_method||''):''}</div>
       ${(x.candidates||[]).map((c,i)=>`<div class="cand">
         <div class="path">#${i+1} ${esc(c.path)} <span class="badge b-${x.status==='resolved'?'resolved':x.status}">${c.score} pts</span></div>
         <div class="meta">${esc(c.file)}:${c.line}</div>
@@ -833,7 +833,7 @@ function renderResolve(rs){
 
 /* ===== Step 3: Generate ===== */
 $('runGenerate').onclick = async () => {
-  err(''); busy($('runGenerate'), true, 'Generating\u2026');
+  err(''); busy($('runGenerate'), true, 'Generating…');
   try{
     const r = await fetch('/api/generate', {
       method:'POST', headers:{'X-Token':T},
