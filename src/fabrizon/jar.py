@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import re
 import zipfile
@@ -79,11 +80,30 @@ def read_jar(path: str) -> JarInfo:
         info = JarInfo(path=path, manifest=manifest)
         info.asset_files = sum(1 for n in names if n.startswith("assets/") and not n.endswith("/"))
         info.data_files = sum(1 for n in names if n.startswith("data/") and not n.endswith("/"))
-        info.nested_jars = sum(1 for n in names if n.startswith("META-INF/jars/") and n.endswith(".jar"))
-        if info.nested_jars:
-            info.warnings.append(
-                f"{info.nested_jars} nested jar(s) in META-INF/jars were not analyzed"
-            )
+        nested_jar_names = [n for n in names if n.startswith("META-INF/jars/") and n.endswith(".jar")]
+        info.nested_jars = len(nested_jar_names)
+
+        # Collect Fabric API refs from nested jars (e.g., fabric-api bundles other mods inside META-INF/jars/)
+        api_refs: set[str] = set()
+        for nested_name in nested_jar_names:
+            try:
+                nested_bytes = zf.read(nested_name)
+                with zipfile.ZipFile(io.BytesIO(nested_bytes)) as nzf:
+                    nested_names = nzf.namelist()
+                    if "fabric.mod.json" in nested_names:
+                        # Parse nested jar manifest
+                        nested_manifest = json.loads(nzf.read("fabric.mod.json").decode("utf-8-sig"))
+                        # Analyze nested jar's classes
+                        for nn in nested_names:
+                            if not nn.endswith(".class") or nn.startswith("META-INF/"):
+                                continue
+                            try:
+                                ci = parse_class(nzf.read(nn))
+                            except ClassFormatError:
+                                continue
+                            api_refs.update(r for r in ci.class_refs if r.startswith("net/fabricmc/fabric/api/"))
+            except Exception as e:
+                info.warnings.append(f"could not read nested jar {nested_name}: {e}")
 
         # mixin configs -> classes and sides
         class_side: dict[str, tuple[str, str]] = {}
@@ -113,7 +133,7 @@ def read_jar(path: str) -> JarInfo:
                     rel = (cfg.package.replace(".", "/") + "/" if cfg.package else "") + cls_name.replace(".", "/")
                     class_side[rel + ".class"] = (side, cfg_name)
 
-        api_refs: set[str] = set()
+        # Continue collecting api_refs from main jar classes
         for n in names:
             if not n.endswith(".class") or n.startswith("META-INF/"):
                 continue

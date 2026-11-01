@@ -121,7 +121,52 @@ def make_handler(app: App, port: int):
                     if not hz or not os.path.isdir(hz):
                         return self._json(400, {"error": "Set a valid Horizon source folder first."})
                     rs = resolve(rep, index_tree(hz), maps, req.get("to") or "named")
-                    bundle = generate(rep, rs, (req.get("crate") or "horizon_core").strip(), (req.get("revision") or "").strip() or None)
+                    
+                    # Build AI config if provided
+                    ai_config = None
+                    ai_key = (req.get("ai_key") or "").strip()
+                    if ai_key:
+                        try:
+                            from .ai_translate import AIConfig
+                            ai_config = AIConfig(
+                                api_key=ai_key,
+                                base_url=(req.get("ai_base") or "https://integrate.api.nvidia.com/v1").strip(),
+                                model=(req.get("ai_model") or "nvidia/nemotron-3-ultra-550b-a55b").strip(),
+                            )
+                        except Exception as e:
+                            return self._json(400, {"error": f"AI config failed: {e}"})
+                    
+                    bundle = generate(
+                        rep, rs,
+                        crate=(req.get("crate") or "horizon_core").strip(),
+                        horizon_revision=(req.get("revision") or "").strip() or None,
+                        jar=read_jar(app.path(req.get("id"))),
+                        ai_config=ai_config,
+                    )
+                    
+                    # If out_dir is provided, write files there too
+                    out_dir = (req.get("out") or "").strip()
+                    if out_dir:
+                        try:
+                            from .generate import write_bundle
+                            write_bundle(bundle, out_dir)
+                        except Exception as e:
+                            return self._json(400, {"error": f"Failed to write output folder: {e}"})
+                    
+                    # If hnmod path provided, package as .hnmod
+                    hnmod_path = (req.get("hnmod") or "").strip()
+                    if hnmod_path:
+                        try:
+                            from .package import package_bundle, build_compatibility
+                            compat = build_compatibility(
+                                hz, game=req.get("game") or "26.3",
+                                horizon_revision=(req.get("revision") or "").strip() or None,
+                                mixins_revision=(req.get("mixins_revision") or "").strip() or None,
+                            )
+                            package_bundle(out_dir or tempfile.mkdtemp(prefix="fabrizon_"), hnmod_path, compat)
+                        except Exception as e:
+                            return self._json(400, {"error": f"Failed to package .hnmod: {e}"})
+                    
                     buf = io.BytesIO()
                     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
                         for name, text in bundle.files.items():

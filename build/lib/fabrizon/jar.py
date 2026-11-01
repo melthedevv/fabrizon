@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import re
 import zipfile
@@ -79,11 +80,39 @@ def read_jar(path: str) -> JarInfo:
         info = JarInfo(path=path, manifest=manifest)
         info.asset_files = sum(1 for n in names if n.startswith("assets/") and not n.endswith("/"))
         info.data_files = sum(1 for n in names if n.startswith("data/") and not n.endswith("/"))
-        info.nested_jars = sum(1 for n in names if n.startswith("META-INF/jars/") and n.endswith(".jar"))
-        if info.nested_jars:
-            info.warnings.append(
-                f"{info.nested_jars} nested jar(s) in META-INF/jars were not analyzed"
-            )
+        nested_jar_names = [n for n in names if n.startswith("META-INF/jars/") and n.endswith(".jar")]
+        info.nested_jars = len(nested_jar_names)
+
+        # Analyze nested jars (e.g., fabric-api bundles other mods inside META-INF/jars/)
+        nested_jars_info: list[JarInfo] = []
+        for nested_name in nested_jar_names:
+            try:
+                nested_bytes = zf.read(nested_name)
+                with zipfile.ZipFile(io.BytesIO(nested_bytes)) as nzf:
+                    nested_names = nzf.namelist()
+                    if "fabric.mod.json" in nested_names:
+                        # Parse nested jar manifest
+                        nested_manifest = json.loads(nzf.read("fabric.mod.json").decode("utf-8-sig"))
+                        nested_info = JarInfo(path=f"{path}!{nested_name}", manifest=nested_manifest)
+                        # Analyze nested jar's classes
+                        for nn in nested_names:
+                            if not nn.endswith(".class") or nn.startswith("META-INF/"):
+                                continue
+                            try:
+                                ci = parse_class(nzf.read(nn))
+                            except ClassFormatError:
+                                continue
+                            api_refs.update(r for r in ci.class_refs if r.startswith("net/fabricmc/fabric/api/"))
+                            # Check if this class is a mixin in the nested jar
+                            # (nested jars may have their own mixin configs)
+                        nested_jars_info.append(nested_info)
+            except Exception as e:
+                info.warnings.append(f"could not read nested jar {nested_name}: {e}")
+
+        # Merge nested jar mixin classes into main info
+        for nested_info in nested_jars_info:
+            # For now we just note them; their mixin classes would need full config parsing
+            pass
 
         # mixin configs -> classes and sides
         class_side: dict[str, tuple[str, str]] = {}

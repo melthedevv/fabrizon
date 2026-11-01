@@ -17,6 +17,7 @@ from typing import Any
 
 from .classfile import Annotation, ClassInfo
 from .jar import JarInfo
+from .fabric_events import fabric_api_refs_to_horizon, EventMapping
 
 MIXIN_PKG = "org/spongepowered/asm/mixin/"
 EXTRAS_PKG = "com/llamalad7/mixinextras/"
@@ -209,6 +210,24 @@ def analyze(jar: JarInfo) -> Report:
                                             note="no documented counterpart in horizon-mixins"))
 
     refmaps = sorted({c.refmap for c in jar.configs if c.refmap})
+
+    # Add Fabric API event mappings as findings
+    # Mods that register Fabric API event callbacks are effectively hooking those events
+    # The nested jars in fabric-api implement these as mixins, so we map them directly
+    for ref, mapping in fabric_api_refs_to_horizon(jar.fabric_api_refs):
+        # Create a synthetic finding for this event
+        findings.append(Finding(
+            mixin="(fabric-api)",
+            member=mapping.callback_method,
+            annotation=f"@EventHandler({ref})",
+            status="mappable",
+            horizon=mapping.horizon_kind,
+            side="client" if "client" in mapping.event_class else ("server" if "server" in mapping.event_class else "common"),
+            targets=[mapping.horizon_target],
+            note=f"Fabric API event: {mapping.event_class} -> {mapping.notes}",
+            selectors=[mapping.callback_method],
+        ))
+
     return Report(
         mod_id=str(m.get("id", "?")),
         version=str(m.get("version", "?")),

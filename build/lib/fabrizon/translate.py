@@ -148,8 +148,13 @@ def _bind_value_param(target: Candidate, handler: Member, renames: dict[int, str
     return Binding("value", target.ret, "$value")
 
 
-def build_helper(resolution: Resolution, jar, crate: str) -> Helper | None:
-    """Build one helper for a resolved finding, or None when there is nothing to emit."""
+def build_helper(resolution: Resolution, jar, crate: str, ai_config: Optional[AIConfig] = None) -> Helper | None:
+    """Build one helper for a resolved finding, or None when there is nothing to emit.
+
+    If `ai_config` is provided and the mechanical translation is incomplete,
+    an LLM will be called to fill in the TODO comments. The result is validated
+    by `rustc` before being used.
+    """
     cand = resolution.candidates[0] if resolution.candidates else None
     if cand is None:
         return None
@@ -230,6 +235,20 @@ def build_helper(resolution: Resolution, jar, crate: str) -> Helper | None:
             lines.append("    value")
     lines.append("}")
     helper.source = "\n".join(lines) + "\n"
+
+    # Optional AI translation pass
+    if (not helper.complete) and ai_config and _HAS_AI:
+        param_str = ", ".join(f"{p['name']}: {p['ty']}" for p in cand.params)
+        fn_name = cand.path.rsplit("::", 1)[-1]
+        target_sig = f"fn {fn_name}({param_str})"
+        if cand.ret:
+            target_sig += f" -> {cand.ret}"
+        java_code = "\n".join(helper.java) if helper.java else "// (no Java source recovered)"
+        ai_result = translate_with_ai(ai_config, target_sig, java_code, helper.source)
+        if ai_result:
+            helper.source = ai_result
+            helper.complete = True
+            helper.notes = [n for n in helper.notes if "TODO" not in n]  # TODO lines were replaced
     return helper
 
 

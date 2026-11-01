@@ -7,6 +7,7 @@ src/fabrizon/ai_translate.py
 src/fabrizon/analysis.py
 src/fabrizon/classfile.py
 src/fabrizon/cli.py
+src/fabrizon/fabric_events.py
 src/fabrizon/generate.py
 src/fabrizon/gui.py
 src/fabrizon/gui_page.py
