@@ -43,8 +43,8 @@ a:hover{text-decoration:underline}
   max-width:1100px; margin:0 auto; padding:32px 24px 80px;
 }
 header{
-  display:flex; align-items:center; gap:16px; margin-bottom:32px;
-  padding-bottom:24px; border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:16px; margin-bottom:24px;
+  padding-bottom:20px; border-bottom:1px solid var(--line);
 }
 .logo{
   width:52px; height:52px; border-radius:14px;
@@ -91,14 +91,14 @@ header .spacer{flex:1}
 
 /* Loaded File Card */
 .loaded-card{
-  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px;
 }
 .loaded-info b{font-size:15px}
 .loaded-info .note{color:var(--mute); font-size:12px; margin-top:2px}
 
 /* Tabs */
 .tabs{
-  display:flex; gap:8px; margin:0 0 20px; padding:4px;
+  display:flex; gap:8px; margin:0 0 24px; padding:4px;
   background:var(--panel2); border-radius:10px;
   border:1px solid var(--line);
 }
@@ -129,7 +129,7 @@ header .spacer{flex:1}
 .btn .spin{
   width:16px; height:16px; border:2.5px solid rgba(255,255,255,.3);
   border-top-color:#fff; border-radius:50%;
-  animation:spin .7s linear infinite;
+  animation:spin .7s linear infinite; display:inline-block;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 .btn.ghost{
@@ -198,6 +198,7 @@ th{
 td{padding:12px; border-top:1px solid var(--line); vertical-align:top}
 td:first-child{padding-left:12px} td:last-child{padding-right:12px}
 tr:hover td{background:var(--panel2)}
+
 code,.mono{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   font-size:12.5px; word-break:break-all;
@@ -257,31 +258,6 @@ code,.mono{
 .summary-badge .count{font-size:22px; font-weight:800}
 .summary-badge .label{font-size:11.5px; color:var(--mute); text-transform:uppercase; letter-spacing:.3px}
 
-/* Expandable Rows */
-.expand-toggle{
-  display:inline-flex; align-items:center; gap:6px;
-  padding:4px 10px; background:var(--panel2); border:1px solid var(--line);
-  border-radius:6px; font-size:11.5px; color:var(--mute);
-  cursor:pointer; transition:var(--transition);
-}
-.expand-toggle:hover{background:var(--panel); color:var(--text); border-color:var(--accent)}
-.expand-toggle svg{width:14px; height:14px; transition:transform .15s}
-.expand-toggle.open svg{transform:rotate(180deg)}
-.expanded-content{
-  padding-top:8px; animation:slideDown .15s ease;
-  border-left:2px solid var(--accent); margin-left:6px; padding-left:10px;
-}
-
-/* Row Actions */
-.row-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
-.copy-btn{
-  padding:6px 12px; background:var(--panel2); border:1px solid var(--line);
-  border-radius:6px; color:var(--mute); font-size:11.5px; font-weight:600;
-  cursor:pointer; transition:var(--transition);
-}
-.copy-btn:hover{background:var(--accent); border-color:transparent; color:#fff}
-.copy-btn.copied{background:var(--ok); border-color:transparent; color:#fff}
-
 /* Empty State */
 .empty{
   text-align:center; padding:48px 24px; color:var(--mute);
@@ -313,8 +289,7 @@ footer a{font-weight:600}
 .toast.warn{border-left:4px solid var(--warn)}
 @keyframes slideIn{from{opacity:0; transform:translateX(20px)}to{opacity:1; transform:translateX(0)}}
 
-/* ===== Settings Tab ===== */
-#t-settings{padding-top:8px}
+/* Settings Tab */
 .settings-grid{
   display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
   gap:16px; margin-bottom:16px;
@@ -334,15 +309,14 @@ footer a{font-weight:600}
 .setting-row input[type=text]:focus, .setting-row input[type=password]:focus{
   outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(109,126,255,.15)
 }
-.setting-actions{display:flex; gap:8px; margin-top:8px}
+.setting-actions{display:flex; align-items:center; gap:12px; margin-top:12px}
 .status-indicator{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600}
 .status-indicator.ok{background:var(--ok-bg); color:var(--ok); border:1px solid rgba(56,217,169,.25)}
 .status-indicator.warn{background:var(--warn-bg); color:var(--warn); border:1px solid rgba(255,195,90,.25)}
 .status-indicator.err{background:var(--bad-bg); color:var(--bad); border:1px solid rgba(255,107,122,.25)}
-.status-indicator .dot{width:8px; height:8px; border-radius:50%}
-.status-indicator.ok .dot{background:var(--ok)}
-.status-indicator.warn .dot{background:var(--warn)}
-.status-indicator.err .dot{background:var(--bad)}
+
+.row{display:flex; align-items:center}
+.hide{display:none !important}
 
 /* Responsive */
 @media (max-width:768px){
@@ -369,161 +343,182 @@ footer a{font-weight:600}
 <div id="err" class="err hide"></div>
 <div id="toasts" class="toast-container"></div>
 
-<!-- Drop Zone -->
-<div id="dropSection">
-  <div id="drop" class="drop" role="button" tabindex="0" aria-label="Choose a Fabric mod jar">
-    <b>Drop a Fabric mod <code>.jar</code> here</b>
-    <span>or click to choose · files never leave your computer</span>
-    <input id="fileInput" type="file" accept=".jar,.zip" class="hide" aria-hidden="true">
-  </div>
+<!-- Tabs are always accessible -->
+<div class="tabs" role="tablist" aria-label="Pipeline steps">
+  <div class="tab on" data-t="analyze" role="tab" aria-selected="true">1 · Analyze</div>
+  <div class="tab" data-t="resolve" role="tab" aria-selected="false">2 · Resolve</div>
+  <div class="tab" data-t="generate" role="tab" aria-selected="false">3 · Generate</div>
+  <div class="tab" data-t="settings" role="tab" aria-selected="false">⚙ Settings</div>
 </div>
 
-<div id="loadedSection" class="hide">
-  <div class="card loaded-card">
-    <div class="loaded-info">
-      <b id="fileName"></b>
-      <div class="note" id="fileSize"></div>
+<!-- Step 1: Analyze -->
+<section id="t-analyze" role="tabpanel" aria-labelledby="tab-analyze">
+  <div id="dropSection">
+    <div id="drop" class="drop" role="button" tabindex="0" aria-label="Choose a Fabric mod jar">
+      <b>Drop a Fabric mod <code>.jar</code> here</b>
+      <span>or click to choose · files never leave your computer</span>
+      <input id="fileInput" type="file" accept=".jar,.zip" class="hide" aria-hidden="true">
     </div>
-    <button class="btn ghost" id="swapBtn">Choose another</button>
-  </div>
-</div>
-
-<div id="main" class="hide">
-  <div class="tabs" role="tablist" aria-label="Pipeline steps">
-    <div class="tab on" data-t="analyze" role="tab" aria-selected="true">1 · Analyze</div>
-    <div class="tab" data-t="resolve" role="tab" aria-selected="false">2 · Resolve</div>
-    <div class="tab" data-t="generate" role="tab" aria-selected="false">3 · Generate</div>
-    <div class="tab" data-t="settings" role="tab" aria-selected="false">⚙ Settings</div>
   </div>
 
-  <!-- Step 1: Analyze -->
-  <section id="t-analyze" role="tabpanel" aria-labelledby="tab-analyze">
+  <div id="loadedSection" class="hide">
+    <div class="card loaded-card">
+      <div class="loaded-info">
+        <b id="fileName"></b>
+        <div class="note" id="fileSize"></div>
+      </div>
+      <button class="btn ghost" id="swapBtn">Choose another mod</button>
+    </div>
     <div class="row" style="margin-bottom:16px; gap:12px; flex-wrap:wrap">
-      <button class="btn wide" id="runAnalyze"><span class="spin hide"></span>Run Analysis</button>
+      <button class="btn wide" id="runAnalyze"><span class="spin hide"></span>Re-run Analysis</button>
       <button class="btn ghost hide" id="exportAnalyze">Export JSON</button>
     </div>
     <div id="outAnalyze"></div>
-  </section>
+  </div>
+</section>
 
-  <!-- Step 2: Resolve -->
-  <section id="t-resolve" class="hide" role="tabpanel" aria-labelledby="tab-resolve">
-    <div class="card">
-      <label>Mappings file <span class="hint">Tiny v1/v2 (intermediary or Yarn), <code>.tiny</code> or <code>.gz</code>. Needed when the jar uses <code>class_1234</code> style names.</span></label>
-      <div class="row" style="gap:10px; flex-wrap:wrap; align-items:center">
-        <button class="btn ghost" id="pickMap" style="white-space:nowrap">Choose mappings…</button>
-        <span class="note" id="mapName" style="flex:1; min-width:180px; text-align:center; padding:12px">none selected</span>
-        <input id="mapFile" type="file" accept=".tiny,.gz" class="hide" aria-hidden="true">
+<!-- Step 2: Resolve -->
+<section id="t-resolve" class="hide" role="tabpanel" aria-labelledby="tab-resolve">
+  <div class="card">
+    <h3>Mappings</h3>
+    <div class="row" style="gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:12px">
+      <div style="flex:1; min-width:240px; background:var(--panel2); padding:12px 14px; border-radius:8px; border:1px solid var(--line)">
+        <b style="color:var(--ok); display:block; margin-bottom:2px">✨ Auto-Mappings Active</b>
+        <span class="hint" id="mapStatusText" style="margin:0">Fabric Yarn mappings will be downloaded/cached automatically based on mod dependencies.</span>
       </div>
-      <label>Horizon source folder <span class="hint">Path to your local Horizon checkout on this computer.</span></label>
-      <input type="text" id="horizon" placeholder="C:\path\to\horizon   or   /home/you/horizon">
-      <label>Target namespace <span class="hint">Usually <code>named</code>.</span></label>
-      <input type="text" id="ns" value="named" style="max-width:240px">
+      <button class="btn ghost" id="pickMap" style="white-space:nowrap">Choose custom .tiny…</button>
+      <input id="mapFile" type="file" accept=".tiny,.gz" class="hide" aria-hidden="true">
     </div>
-    <div class="card" style="margin-top:16px">
-      <label>Cargo target name <span class="hint">Prefix for target IDs, usually <code>horizon_core</code>.</span></label>
-      <input type="text" id="crate" value="horizon_core" style="max-width:240px">
-      <label>Horizon commit <span class="hint">Optional exact 40-character hash for <code>[compatibility]</code>.</span></label>
-      <input type="text" id="rev" placeholder="028f6088..." style="max-width:360px">
-      <div class="row" style="margin-top:16px; gap:10px; flex-wrap:wrap">
-        <button class="btn wide" id="runResolve"><span class="spin hide"></span>Resolve Names</button>
-        <button class="btn ghost" id="exportResolve">Export JSON</button>
-      </div>
-    </div>
-    <div id="outResolve"></div>
-  </section>
 
-  <!-- Step 3: Generate -->
-  <section id="t-generate" class="hide" role="tabpanel" aria-labelledby="tab-generate">
-    <div class="card">
-      <h3>Bundle Options</h3>
-      <div class="grid" style="margin-top:8px">
-        <div>
-          <label>Output folder <span class="hint">Where to write the bundle.</span></label>
-          <input type="text" id="outDir" placeholder="/path/to/output">
-        </div>
-        <div>
-          <label>Package as <code>.hnmod</code> <span class="hint">Also create a registry-ready zip.</span></label>
-          <input type="text" id="hnmodPath" placeholder="/path/to/mod.hnmod (optional)">
-        </div>
-        <div>
-          <label>Minecraft version <span class="hint">e.g. <code>26.3</code> for the .hnmod manifest.</span></label>
-          <input type="text" id="gameVer" placeholder="26.3" style="max-width:180px">
-        </div>
-        <div>
-          <label>horizon-mixins revision <span class="hint">Optional 40-char commit for the .hnmod.</span></label>
-          <input type="text" id="mixinsRev" placeholder="d9c83d7096b7ea5b83678da2efdfd6161f74997e" style="max-width:360px">
-        </div>
+    <label>Horizon source folder <span class="hint">Path to your local Horizon checkout on this computer (auto-detected if available).</span></label>
+    <input type="text" id="horizon" placeholder="C:\path\to\horizon   or   /home/you/horizon">
+
+    <div class="grid" style="margin-top:12px; margin-bottom:0">
+      <div>
+        <label>Target namespace <span class="hint">Usually <code>named</code>.</span></label>
+        <input type="text" id="ns" value="named">
       </div>
-      <label>AI Translation (optional) <span class="hint">Fill <code>// TODO(stage 4):</code> comments using an LLM.</span></label>
-      <div class="grid" style="margin-top:8px">
-        <div>
-          <label>API Key <span class="hint">NVIDIA / OpenAI-compatible key.</span></label>
-          <input type="password" id="aiKey" placeholder="nvapi-… or sk-…" style="max-width:320px">
-        </div>
-        <div>
-          <label>Base URL <span class="hint">Default: NVIDIA API.</span></label>
-          <input type="text" id="aiBase" value="https://integrate.api.nvidia.com/v1" style="max-width:400px">
-        </div>
-        <div>
-          <label>Model <span class="hint">Default: Nemotron 3 Ultra.</span></label>
-          <input type="text" id="aiModel" value="nvidia/nemotron-3-ultra-550b-a55b" style="max-width:400px">
-        </div>
-      </div>
-      <div class="row" style="margin-top:16px; gap:10px; flex-wrap:wrap">
-        <button class="btn wide" id="runGenerate"><span class="spin hide"></span>Generate Bundle</button>
+      <div>
+        <label>Cargo target name <span class="hint">Prefix for target IDs, usually <code>horizon_core</code>.</span></label>
+        <input type="text" id="crate" value="horizon_core">
       </div>
     </div>
-    <div id="outGenerate"></div>
-  </section>
 
-  <!-- Step 4: Settings -->
-  <section id="t-settings" class="hide" role="tabpanel" aria-labelledby="tab-settings">
+    <label>Horizon commit <span class="hint">Optional exact 40-character commit hash for <code>[compatibility]</code>.</span></label>
+    <input type="text" id="rev" placeholder="ba6344a59cb9e755b730dcf02285fc0d33b97d3c" style="max-width:380px">
+
+    <div class="row" style="margin-top:20px; gap:10px; flex-wrap:wrap">
+      <button class="btn wide" id="runResolve"><span class="spin hide"></span>Resolve Names</button>
+      <button class="btn ghost hide" id="exportResolve">Export JSON</button>
+    </div>
+  </div>
+  <div id="outResolve"></div>
+</section>
+
+<!-- Step 3: Generate -->
+<section id="t-generate" class="hide" role="tabpanel" aria-labelledby="tab-generate">
+  <div class="card">
+    <h3>Bundle Options</h3>
+    <div class="grid" style="margin-top:8px">
+      <div>
+        <label>Output folder <span class="hint">Where to write the bundle on disk (optional).</span></label>
+        <input type="text" id="outDir" placeholder="/path/to/output">
+      </div>
+      <div>
+        <label>Package as <code>.hnmod</code> <span class="hint">Also create a registry-ready zip.</span></label>
+        <input type="text" id="hnmodPath" placeholder="/path/to/mod.hnmod (optional)">
+      </div>
+      <div>
+        <label>Minecraft version <span class="hint">For .hnmod manifest (e.g. <code>26.3</code>).</span></label>
+        <input type="text" id="gameVer" placeholder="26.3" style="max-width:180px">
+      </div>
+      <div>
+        <label>horizon-mixins revision <span class="hint">Optional 40-char commit for the .hnmod.</span></label>
+        <input type="text" id="mixinsRev" placeholder="d9c83d7096b7ea5b83678da2efdfd6161f74997e" style="max-width:360px">
+      </div>
+    </div>
+
+    <h3>AI Translation (Optional)</h3>
+    <span class="hint" style="margin-bottom:12px">Fill complex Java handler bodies using an LLM (uses settings configured in ⚙ Settings tab).</span>
+    <div class="grid" style="margin-top:8px">
+      <div>
+        <label>API Key</label>
+        <input type="password" id="genAiKey" placeholder="Synced from Settings">
+      </div>
+      <div>
+        <label>Base URL</label>
+        <input type="text" id="genAiBase" value="https://integrate.api.nvidia.com/v1">
+      </div>
+      <div>
+        <label>Model</label>
+        <input type="text" id="genAiModel" value="nvidia/nemotron-3-ultra-550b-a55b">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:20px; gap:10px; flex-wrap:wrap">
+      <button class="btn wide" id="runGenerate"><span class="spin hide"></span>Generate Bundle</button>
+    </div>
+  </div>
+  <div id="outGenerate"></div>
+</section>
+
+<!-- Step 4: Settings -->
+<section id="t-settings" class="hide" role="tabpanel" aria-labelledby="tab-settings">
+  <div class="card">
+    <h2>⚙ Fabrizon Settings</h2>
+    <p class="hint" style="margin-bottom:20px; font-size:13px">Configure your API key and default preferences. Settings are saved locally in your browser and used automatically across runs.</p>
+
     <div class="settings-grid">
       <div class="setting-group">
-        <h3>AI Translation</h3>
+        <h3>AI Translation API</h3>
         <div class="setting-row">
-          <label>API Key <span class="hint">NVIDIA / OpenAI-compatible key. Also set via <code>FABRIZON_NVIDIA_API_KEY</code> env var.</span></label>
-          <input type="password" id="aiKey" placeholder="nvapi… or sk…" autocomplete="off">
+          <label>API Key <span class="hint">NVIDIA API or OpenAI-compatible key.</span></label>
+          <input type="password" id="settingsAiKey" placeholder="nvapi-... or sk-..." autocomplete="off">
         </div>
         <div class="setting-row">
-          <label>Base URL <span class="hint">Default: NVIDIA API.</span></label>
-          <input type="text" id="aiBase" value="https://integrate.api.nvidia.com/v1">
+          <label>Base URL <span class="hint">Default: NVIDIA API endpoint.</span></label>
+          <input type="text" id="settingsAiBase" value="https://integrate.api.nvidia.com/v1">
         </div>
         <div class="setting-row">
-          <label>Model <span class="hint">Default: Nemotron 3 Ultra.</span></label>
-          <input type="text" id="aiModel" value="nvidia/nemotron-3-ultra-550b-a55b">
+          <label>Model <span class="hint">Default: Nemotron 3 Ultra (or Nemotron 3.5 Lightning).</span></label>
+          <input type="text" id="settingsAiModel" value="nvidia/nemotron-3-ultra-550b-a55b">
         </div>
         <div class="setting-actions">
-          <button class="btn ghost" id="testAi">Test Connection</button>
+          <button class="btn ghost" id="testAi" type="button">Test Connection</button>
           <span class="status-indicator hide" id="aiStatus"></span>
         </div>
       </div>
+
       <div class="setting-group">
-        <h3>Defaults</h3>
+        <h3>Default Paths & Targets</h3>
         <div class="setting-row">
-          <label>Horizon source folder <span class="hint">Path to your local Horizon checkout.</span></label>
-          <input type="text" id="defHorizon" placeholder="C:\path\to\horizon   or   /home/you/horizon">
+          <label>Horizon Source Folder <span class="hint">Path to your local Horizon source checkout.</span></label>
+          <input type="text" id="defHorizon" placeholder="C:\path\to\horizon or /home/you/horizon">
         </div>
         <div class="setting-row">
-          <label>Target namespace <span class="hint">Usually <code>named</code>.</span></label>
+          <label>Target Namespace <span class="hint">Usually <code>named</code>.</span></label>
           <input type="text" id="defNs" value="named" style="max-width:240px">
         </div>
         <div class="setting-row">
-          <label>Cargo target name <span class="hint">Prefix for target IDs, usually <code>horizon_core</code>.</span></label>
+          <label>Cargo Target Name <span class="hint">Prefix for target IDs, usually <code>horizon_core</code>.</span></label>
           <input type="text" id="defCrate" value="horizon_core" style="max-width:240px">
         </div>
         <div class="setting-row">
-          <label>Minecraft version <span class="hint">For .hnmod manifest (e.g. <code>26.3</code>).</span></label>
+          <label>Minecraft Version <span class="hint">For .hnmod manifest (e.g. <code>26.3</code>).</span></label>
           <input type="text" id="defGame" value="26.3" style="max-width:180px">
         </div>
         <div class="setting-row">
-          <label>horizon-mixins revision <span class="hint">40-char commit for .hnmod.</span></label>
-          <input type="text" id="defMixinsRev" placeholder="d9c83d7096b7ea5b83678da2efdfd6161f74997e" style="max-width:400px">
+          <label>horizon-mixins Revision <span class="hint">40-character commit for .hnmod.</span></label>
+          <input type="text" id="defMixinsRev" placeholder="d9c83d7096b7ea5b83678da2efdfd6161f74997e">
         </div>
       </div>
     </div>
-  </section>
-</div>
+
+    <div class="row" style="margin-top:20px; gap:12px">
+      <button class="btn" id="saveSettingsBtn" type="button">Save Settings</button>
+    </div>
+  </div>
+</section>
 
 <footer>
   Made by <b>melthedev</b> · <a href="https://ko-fi.com/melthedev" target="_blank" rel="noopener">Support on Ko-fi</a><br>
@@ -536,7 +531,7 @@ footer a{font-weight:600}
 /* ===== Core Utilities ===== */
 const T = new URLSearchParams(location.search).get('t') || '';
 const $ = id => document.getElementById(id);
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&','<':'<','>':'>','"':'"'}[c]));
+const esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
 const size = n => n > 1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1, Math.round(n/1024))+' KB';
 
 let jarId = null, mapId = null, lastAnalyze = null, lastResolve = null;
@@ -571,7 +566,7 @@ function busy(btn, on, txt){
   btn.disabled = on;
   if(on){
     btn.dataset.orig = btn.innerHTML;
-    btn.innerHTML = '<span class="spin"></span>' + txt;
+    btn.innerHTML = '<span class="spin"></span> ' + txt;
   }else{
     btn.innerHTML = btn.dataset.orig || btn.textContent;
   }
@@ -581,14 +576,8 @@ function download(name, obj){
   a.href=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}));
   a.download=name; a.click();
 }
-function copyText(text, btn){
-  navigator.clipboard.writeText(text).then(()=>{
-    btn.classList.add('copied'); btn.textContent='Copied!';
-    setTimeout(()=>{btn.classList.remove('copied'); btn.textContent='Copy'}, 1500);
-  });
-}
 
-/* ===== Drag & Drop ===== */
+/* ===== File Handling ===== */
 function handleFile(f){
   if(!f) return;
   err('');
@@ -598,8 +587,8 @@ function handleFile(f){
     $('fileSize').textContent = size(f.size);
     $('dropSection').classList.add('hide');
     $('loadedSection').classList.remove('hide');
-    $('main').classList.remove('hide');
     clearResults();
+    runAnalyze();
   }).catch(e=>err(e.message));
 }
 
@@ -612,93 +601,121 @@ $('fileInput').onchange = e => handleFile(e.target.files[0]);
 ['dragleave','drop'].forEach(ev => document.addEventListener(ev, e => {e.preventDefault(); drop.classList.remove('over')}));
 document.addEventListener('drop', e => {const f=e.dataTransfer.files[0]; if(f) handleFile(f)});
 
-/* ===== Tabs ===== */
+/* ===== Tabs Switching ===== */
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tab').forEach(x => {
     x.classList.toggle('on', x===t);
     x.setAttribute('aria-selected', x===t);
   });
-  $('t-analyze').classList.toggle('hide', t.dataset.t!=='analyze');
-  $('t-resolve').classList.toggle('hide', t.dataset.t!=='resolve');
-  $('t-generate').classList.toggle('hide', t.dataset.t!=='generate');
-  $('t-settings').classList.toggle('hide', t.dataset.t!=='settings');
+  const target = t.dataset.t;
+  $('t-analyze').classList.toggle('hide', target!=='analyze');
+  $('t-resolve').classList.toggle('hide', target!=='resolve');
+  $('t-generate').classList.toggle('hide', target!=='generate');
+  $('t-settings').classList.toggle('hide', target!=='settings');
 });
 
 /* ===== Mappings File ===== */
 $('pickMap').onclick = () => $('mapFile').click();
 $('mapFile').onchange = async e => {
   const f = e.target.files[0]; if(!f) return; err('');
-  try{mapId = await upload(f, 'map'); $('mapName').textContent = f.name + ' (' + size(f.size) + ')'; $('mapName').classList.remove('note')}
-  catch(x){err(x.message)}
+  try{
+    mapId = await upload(f, 'map');
+    $('mapStatusText').textContent = 'Custom file: ' + f.name + ' (' + size(f.size) + ')';
+    toast('Custom mappings uploaded', 'ok');
+  }catch(x){err(x.message)}
 };
 
-/* ===== Settings ===== */
+/* ===== Settings System ===== */
 function loadSettings(){
   try{
     const s = JSON.parse(localStorage.getItem('fabrizon_settings') || '{}');
-    if(s.aiKey) $('aiKey').value = s.aiKey;
-    if(s.aiBase) $('aiBase').value = s.aiBase;
-    if(s.aiModel) $('aiModel').value = s.aiModel;
-    if(s.defHorizon) $('defHorizon').value = s.defHorizon;
-    if(s.defNs) $('defNs').value = s.defNs;
-    if(s.defCrate) $('defCrate').value = s.defCrate;
-    if(s.defGame) $('defGame').value = s.defGame;
-    if(s.defMixinsRev) $('defMixinsRev').value = s.defMixinsRev;
+    if(s.aiKey) { $('settingsAiKey').value = s.aiKey; $('genAiKey').value = s.aiKey; }
+    if(s.aiBase) { $('settingsAiBase').value = s.aiBase; $('genAiBase').value = s.aiBase; }
+    if(s.aiModel) { $('settingsAiModel').value = s.aiModel; $('genAiModel').value = s.aiModel; }
+    if(s.defHorizon) { $('defHorizon').value = s.defHorizon; $('horizon').value = s.defHorizon; }
+    if(s.defNs) { $('defNs').value = s.defNs; $('ns').value = s.defNs; }
+    if(s.defCrate) { $('defCrate').value = s.defCrate; $('crate').value = s.defCrate; }
+    if(s.defGame) { $('defGame').value = s.defGame; $('gameVer').value = s.defGame; }
+    if(s.defMixinsRev) { $('defMixinsRev').value = s.defMixinsRev; $('mixinsRev').value = s.defMixinsRev; }
   }catch{}
+
+  // Auto-detect Horizon source checkout if not set
+  if(!$('defHorizon').value.trim()){
+    api('/api/system_info').then(info => {
+      if(info && info.horizon && !$('defHorizon').value.trim()){
+        $('defHorizon').value = info.horizon;
+        $('horizon').value = info.horizon;
+      }
+    }).catch(()=>{});
+  }
 }
-function saveSettings(){
+
+function saveSettings(silent=false){
   const s = {
-    aiKey: $('aiKey').value,
-    aiBase: $('aiBase').value,
-    aiModel: $('aiModel').value,
-    defHorizon: $('defHorizon').value,
-    defNs: $('defNs').value,
-    defCrate: $('defCrate').value,
-    defGame: $('defGame').value,
-    defMixinsRev: $('defMixinsRev').value,
+    aiKey: $('settingsAiKey').value.trim(),
+    aiBase: $('settingsAiBase').value.trim() || 'https://integrate.api.nvidia.com/v1',
+    aiModel: $('settingsAiModel').value.trim() || 'nvidia/nemotron-3-ultra-550b-a55b',
+    defHorizon: $('defHorizon').value.trim(),
+    defNs: $('defNs').value.trim() || 'named',
+    defCrate: $('defCrate').value.trim() || 'horizon_core',
+    defGame: $('defGame').value.trim() || '26.3',
+    defMixinsRev: $('defMixinsRev').value.trim(),
   };
   localStorage.setItem('fabrizon_settings', JSON.stringify(s));
-  return s;
-}
-function applySettingsToGenerateForm(s){
-  if(s.aiKey) $('aiKey').value = s.aiKey;
+
+  // Sync to generate form
+  $('genAiKey').value = s.aiKey;
+  $('genAiBase').value = s.aiBase;
+  $('genAiModel').value = s.aiModel;
   if(s.defHorizon) $('horizon').value = s.defHorizon;
   if(s.defNs) $('ns').value = s.defNs;
   if(s.defCrate) $('crate').value = s.defCrate;
   if(s.defGame) $('gameVer').value = s.defGame;
   if(s.defMixinsRev) $('mixinsRev').value = s.defMixinsRev;
+
+  if(!silent) toast('Settings saved successfully', 'ok');
+  return s;
 }
+
+$('saveSettingsBtn').onclick = () => saveSettings(false);
+
+['settingsAiKey','settingsAiBase','settingsAiModel','defHorizon','defNs','defCrate','defGame','defMixinsRev'].forEach(id=>{
+  const el = $(id); if(el) el.onchange = () => saveSettings(true);
+});
+
 async function testAiConnection(){
   const btn = $('testAi');
   const status = $('aiStatus');
-  const key = $('aiKey').value.trim();
-  const base = $('aiBase').value.trim() || 'https://integrate.api.nvidia.com/v1';
-  const model = $('aiModel').value.trim() || 'nvidia/nemotron-3-ultra-550b-a55b';
-  if(!key){ status.textContent='Enter API key first'; status.className='status-indicator warn'; status.classList.remove('hide'); return; }
+  const key = $('settingsAiKey').value.trim();
+  const base = $('settingsAiBase').value.trim() || 'https://integrate.api.nvidia.com/v1';
+  const model = $('settingsAiModel').value.trim() || 'nvidia/nemotron-3-ultra-550b-a55b';
+  if(!key){
+    status.textContent='Enter API key first';
+    status.className='status-indicator warn';
+    status.classList.remove('hide');
+    return;
+  }
   busy(btn, true, 'Testing…');
   status.classList.add('hide');
   try{
-    const r = await fetch(base + '/models', {headers:{'Authorization':'Bearer '+key}});
-    if(r.ok){
-      status.textContent='Connected OK'; status.className='status-indicator ok'; status.classList.remove('hide');
-      toast('API connection successful', 'ok');
-    }else{
-      const t = await r.text();
-      status.textContent='Failed: '+r.status; status.className='status-indicator err'; status.classList.remove('hide');
-      toast('API test failed: '+r.status, 'err');
-    }
+    const r = await api('/api/test_ai', {
+      method:'POST',
+      body:JSON.stringify({key, base, model})
+    });
+    status.textContent = r.message || 'Connected OK';
+    status.className = 'status-indicator ok';
+    status.classList.remove('hide');
+    toast('API connection successful', 'ok');
   }catch(e){
-    status.textContent='Error: '+e.message; status.className='status-indicator err'; status.classList.remove('hide');
+    status.textContent = e.message;
+    status.className = 'status-indicator err';
+    status.classList.remove('hide');
     toast('API test error: '+e.message, 'err');
+  }finally{
+    busy(btn, false);
   }
-  finally{busy(btn, false);}
 }
 $('testAi').onclick = testAiConnection;
-['aiKey','aiBase','aiModel','defHorizon','defNs','defCrate','defGame','defMixinsRev'].forEach(id=>{
-  const el = $(id); if(el) el.onchange = () => saveSettings();
-});
-loadSettings();
-applySettingsToGenerateForm(JSON.parse(localStorage.getItem('fabrizon_settings') || '{}'));
 
 /* ===== Clear Results ===== */
 function clearResults(){
@@ -712,6 +729,7 @@ function clearResults(){
 
 /* ===== Step 1: Analyze ===== */
 async function runAnalyze(){
+  if(!jarId) { toast('Drop a mod jar first', 'warn'); return; }
   err(''); busy($('runAnalyze'), true, 'Analyzing…');
   try{
     const r = await api('/api/analyze', {method:'POST', body:JSON.stringify({id:jarId})});
@@ -734,7 +752,7 @@ function renderAnalyze(r){
         <div>Classes</div><div>${r.class_count} (${r.mixin_class_count} mixin classes)</div>
         <div>Sides</div><div>common ${r.sides.common} · client ${r.sides.client} · server ${r.sides.server}</div>
         <div>Content</div><div>${r.asset_files} assets, ${r.data_files} data files</div>
-        <div>Names</div><div>${r.intermediary_names?'<span class="badge b-review">intermediary — needs mappings in step 2</span>':'readable'}</div>
+        <div>Names</div><div>${r.intermediary_names?'<span class="badge b-review">intermediary (auto-resolved with Yarn)</span>':'<span class="badge b-ok">readable</span>'}</div>
       </div>
     </div>
     <div class="grid">
@@ -780,10 +798,11 @@ function renderAnalyze(r){
 
 /* ===== Step 2: Resolve ===== */
 $('runResolve').onclick = async () => {
+  if(!jarId){ toast('Upload a mod jar on Analyze tab first', 'warn'); return; }
   err(''); busy($('runResolve'), true, 'Resolving…');
   try{
     const r = await api('/api/resolve', {method:'POST', body:JSON.stringify({
-      id:jarId, map_id:mapId, horizon:$('horizon').value.trim(), to:$('ns').value.trim()||'named'
+      id:jarId, map_id:mapId, horizon:$('horizon').value.trim() || $('defHorizon').value.trim(), to:$('ns').value.trim()||'named'
     })});
     lastResolve = r; renderResolve(r); $('exportResolve').classList.remove('hide');
   }catch(e){err(e.message)}
@@ -793,7 +812,7 @@ $('exportResolve').onclick = () => download('fabrizon-resolve.json', lastResolve
 
 function renderResolve(rs){
   if(!rs.length){
-    $('outResolve').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><h3>Nothing to resolve</h3><p>Run analysis first, then provide mappings and Horizon source.</p></div>';
+    $('outResolve').innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><h3>Nothing to resolve</h3><p>Run analysis first, then click Resolve Names.</p></div>';
     return;
   }
 
@@ -808,7 +827,6 @@ function renderResolve(rs){
 
   h += rs.map(x => {
     const mixinShort = x.mixin.split('/').pop();
-    const cand = x.candidates?.[0];
     return `<div class="card">
       <div class="row" style="align-items:flex-start; gap:12px; flex-wrap:wrap">
         <span class="badge b-${x.status}">${x.status}</span>
@@ -824,7 +842,7 @@ function renderResolve(rs){
         <div class="why">${esc(c.why.join('; '))}</div>
         ${c.target?`<div class="meta">Target ID: <code>${esc(c.target)}</code></div>`:''}
       </div>`).join('')}
-      ${(x.notes||[]).map(n=>`<div class="note">\u2022 ${esc(n)}</div>`).join('')}
+      ${(x.notes||[]).map(n=>`<div class="note">• ${esc(n)}</div>`).join('')}
     </div>`;
   }).join('');
 
@@ -833,21 +851,24 @@ function renderResolve(rs){
 
 /* ===== Step 3: Generate ===== */
 $('runGenerate').onclick = async () => {
+  if(!jarId){ toast('Upload a mod jar on Analyze tab first', 'warn'); return; }
   err(''); busy($('runGenerate'), true, 'Generating…');
   try{
     const r = await fetch('/api/generate', {
       method:'POST', headers:{'X-Token':T},
       body:JSON.stringify({
-        id:jarId, map_id:mapId, horizon:$('horizon').value.trim(),
-        to:$('ns').value.trim()||'named', crate:$('crate').value.trim(),
-        revision:$('rev').value.trim(),
+        id:jarId, map_id:mapId,
+        horizon:$('horizon').value.trim() || $('defHorizon').value.trim(),
+        to:$('ns').value.trim()||'named',
+        crate:$('crate').value.trim() || $('defCrate').value.trim() || 'horizon_core',
+        revision:$('rev').value.trim() || $('defMixinsRev').value.trim(),
         out:$('outDir').value.trim(),
         hnmod:$('hnmodPath').value.trim()||undefined,
-        game:$('gameVer').value.trim()||undefined,
-        mixins_revision:$('mixinsRev').value.trim()||undefined,
-        ai_key:$('aiKey').value.trim()||undefined,
-        ai_base:$('aiBase').value.trim()||undefined,
-        ai_model:$('aiModel').value.trim()||undefined,
+        game:$('gameVer').value.trim() || $('defGame').value.trim() || '26.3',
+        mixins_revision:$('mixinsRev').value.trim() || $('defMixinsRev').value.trim() || undefined,
+        ai_key:$('genAiKey').value.trim() || $('settingsAiKey').value.trim() || undefined,
+        ai_base:$('genAiBase').value.trim() || $('settingsAiBase').value.trim() || undefined,
+        ai_model:$('genAiModel').value.trim() || $('settingsAiModel').value.trim() || undefined,
       })
     });
     if(!r.ok){
@@ -858,7 +879,7 @@ $('runGenerate').onclick = async () => {
     const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
     a.download='fabrizon-bundle.zip'; a.click();
-    toast('Bundle downloaded as fabrizon-bundle.zip', 'ok');
+    toast('Bundle generated and downloaded as fabrizon-bundle.zip', 'ok');
   }catch(e){err(e.message)}
   finally{busy($('runGenerate'), false);}
 };
@@ -867,6 +888,7 @@ $('runGenerate').onclick = async () => {
 document.addEventListener('DOMContentLoaded', () => {
   const v = new URLSearchParams(location.search).get('v');
   if(v) $('versionBadge').textContent = 'v'+v;
+  loadSettings();
 });
 </script></body></html>
 """

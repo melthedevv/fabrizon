@@ -79,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "generate":
         from .generate import generate, write_bundle
-        from .mappings import MappingError, load_tiny
+        from .mappings import MappingError, load_tiny, ensure_mappings
         from .package import PackageError, build_compatibility, load_compatibility, package_bundle
         from .resolve import resolve
         from .rustindex import index_tree
@@ -87,6 +87,12 @@ def main(argv: list[str] | None = None) -> int:
             jar = read_jar(args.jar)
             report = analyze(jar)
             maps = load_tiny(args.mappings) if args.mappings else None
+            if maps is None:
+                try:
+                    mc_v = jar.manifest.get("depends", {}).get("minecraft")
+                    _, maps = ensure_mappings(mc_v)
+                except Exception:
+                    maps = None
             rs = resolve(report, index_tree(args.horizon), maps, args.to)
 
             # Build AI config if provided
@@ -152,12 +158,19 @@ def main(argv: list[str] | None = None) -> int:
         return serve(args.port, not args.no_browser)
 
     if args.cmd == "resolve":
-        from .mappings import MappingError, load_tiny
+        from .mappings import MappingError, load_tiny, ensure_mappings
         from .resolve import render_resolutions, resolve
         from .rustindex import index_tree
         try:
-            report = analyze(read_jar(args.jar))
+            jar = read_jar(args.jar)
+            report = analyze(jar)
             maps = load_tiny(args.mappings) if args.mappings else None
+            if maps is None:
+                try:
+                    mc_v = jar.manifest.get("depends", {}).get("minecraft")
+                    _, maps = ensure_mappings(mc_v)
+                except Exception:
+                    maps = None
             fns = index_tree(args.horizon) if args.horizon else []
             rs = resolve(report, fns, maps, args.to)
         except (NotAFabricMod, MappingError, OSError) as e:

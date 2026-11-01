@@ -83,28 +83,6 @@ def read_jar(path: str) -> JarInfo:
         nested_jar_names = [n for n in names if n.startswith("META-INF/jars/") and n.endswith(".jar")]
         info.nested_jars = len(nested_jar_names)
 
-        # Collect Fabric API refs from nested jars (e.g., fabric-api bundles other mods inside META-INF/jars/)
-        api_refs: set[str] = set()
-        for nested_name in nested_jar_names:
-            try:
-                nested_bytes = zf.read(nested_name)
-                with zipfile.ZipFile(io.BytesIO(nested_bytes)) as nzf:
-                    nested_names = nzf.namelist()
-                    if "fabric.mod.json" in nested_names:
-                        # Parse nested jar manifest
-                        nested_manifest = json.loads(nzf.read("fabric.mod.json").decode("utf-8-sig"))
-                        # Analyze nested jar's classes
-                        for nn in nested_names:
-                            if not nn.endswith(".class") or nn.startswith("META-INF/"):
-                                continue
-                            try:
-                                ci = parse_class(nzf.read(nn))
-                            except ClassFormatError:
-                                continue
-                            api_refs.update(r for r in ci.class_refs if r.startswith("net/fabricmc/fabric/api/"))
-            except Exception as e:
-                info.warnings.append(f"could not read nested jar {nested_name}: {e}")
-
         # mixin configs -> classes and sides
         class_side: dict[str, tuple[str, str]] = {}
         for cfg_name, env in _manifest_configs(manifest):
@@ -133,7 +111,8 @@ def read_jar(path: str) -> JarInfo:
                     rel = (cfg.package.replace(".", "/") + "/" if cfg.package else "") + cls_name.replace(".", "/")
                     class_side[rel + ".class"] = (side, cfg_name)
 
-        # Continue collecting api_refs from main jar classes
+        # Classes in root jar
+        api_refs: set[str] = set()
         for n in names:
             if not n.endswith(".class") or n.startswith("META-INF/"):
                 continue
@@ -153,5 +132,64 @@ def read_jar(path: str) -> JarInfo:
         for n in class_side:
             if n not in names:
                 info.warnings.append(f"mixin class {n} is listed in a config but missing from the jar")
+
+        # Process nested jars (e.g., fabric-api submodules or JiJ libraries)
+        for nested_name in nested_jar_names:
+            try:
+                nested_bytes = zf.read(nested_name)
+                with zipfile.ZipFile(io.BytesIO(nested_bytes)) as nzf:
+                    nnames = nzf.namelist()
+                    if "fabric.mod.json" not in nnames:
+                        continue
+                    try:
+                        nmanifest = json.loads(nzf.read("fabric.mod.json").decode("utf-8-sig"))
+                    except Exception:
+                        continue
+
+                    info.asset_files += sum(1 for n in nnames if n.startswith("assets/") and not n.endswith("/"))
+                    info.data_files += sum(1 for n in nnames if n.startswith("data/") and not n.endswith("/"))
+
+                    n_class_side: dict[str, tuple[str, str]] = {}
+                    for cfg_name, env in _manifest_configs(nmanifest):
+                        if cfg_name not in nnames:
+                            continue
+                        try:
+                            raw = json.loads(nzf.read(cfg_name).decode("utf-8-sig"))
+                        except Exception:
+                            continue
+                        sub_cfg_name = f"{nested_name}!{cfg_name}"
+                        cfg = MixinConfig(
+                            name=sub_cfg_name,
+                            package=raw.get("package", ""),
+                            refmap=raw.get("refmap"),
+                            environment=env,
+                            common=list(raw.get("mixins", [])),
+                            client=list(raw.get("client", [])),
+                            server=list(raw.get("server", [])),
+                        )
+                        info.configs.append(cfg)
+                        for group, side in ((cfg.common, "common"), (cfg.client, "client"), (cfg.server, "server")):
+                            for cls_name in group:
+                                if env in ("client", "server"):
+                                    side = env
+                                rel = (cfg.package.replace(".", "/") + "/" if cfg.package else "") + cls_name.replace(".", "/")
+                                n_class_side[rel + ".class"] = (side, sub_cfg_name)
+
+                    for nn in nnames:
+                        if not nn.endswith(".class") or nn.startswith("META-INF/"):
+                            continue
+                        info.class_count += 1
+                        try:
+                            ci = parse_class(nzf.read(nn))
+                        except ClassFormatError:
+                            continue
+                        api_refs.update(r for r in ci.class_refs if r.startswith("net/fabricmc/fabric/api/"))
+                        if nn in n_class_side:
+                            side, cfg_name = n_class_side[nn]
+                            info.mixin_classes.append(MixinClass(f"{nested_name}!{nn}", side, cfg_name, ci))
+                            if any(_INTERMEDIARY.search(s) for s in ci.utf8):
+                                info.intermediary_names = True
+            except Exception as e:
+                info.warnings.append(f"could not read nested jar {nested_name}: {e}")
         info.fabric_api_refs = sorted(api_refs)
     return info

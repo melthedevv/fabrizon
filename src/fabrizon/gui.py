@@ -54,6 +54,27 @@ class App:
         shutil.rmtree(self.tmp, ignore_errors=True)
 
 
+def find_local_horizon() -> str | None:
+    candidates = [
+        r"C:\Users\sesed\AppData\Local\Temp\opencode\hz\hzsrc\horizon-ba6344a59cb9e755b730dcf02285fc0d33b97d3c",
+        os.path.abspath(os.path.join(os.getcwd(), "..", "horizon")),
+        os.path.expanduser("~/horizon"),
+    ]
+    temp_dir = os.path.expandvars(r"%LOCALAPPDATA%\Temp\opencode\hz\hzsrc")
+    if os.path.isdir(temp_dir):
+        try:
+            for entry in os.listdir(temp_dir):
+                p = os.path.join(temp_dir, entry)
+                if os.path.isdir(p) and "horizon" in entry:
+                    candidates.insert(0, p)
+        except Exception:
+            pass
+    for c in candidates:
+        if c and os.path.isdir(c) and os.path.exists(os.path.join(c, "Cargo.toml")):
+            return c
+    return None
+
+
 def make_handler(app: App, port: int):
     hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
 
@@ -80,11 +101,19 @@ def make_handler(app: App, port: int):
 
         def do_GET(self):
             u = urlparse(self.path)
-            if not self._ok_host() or u.path != "/":
+            if not self._ok_host():
                 return self._json(404, {"error": "not found"})
-            if parse_qs(u.query).get("t", [""])[0] != app.token:
-                return self._send(403, b"Open Fabrizon with the link it printed.", "text/plain")
-            self._send(200, PAGE.encode(), "text/html; charset=utf-8")
+            if u.path == "/":
+                if parse_qs(u.query).get("t", [""])[0] != app.token:
+                    return self._send(403, b"Open Fabrizon with the link it printed.", "text/plain")
+                return self._send(200, PAGE.encode(), "text/html; charset=utf-8")
+            if u.path == "/api/system_info":
+                tok = parse_qs(u.query).get("t", [""])[0] or self.headers.get("X-Token")
+                if tok != app.token:
+                    return self._send(403, b"forbidden", "text/plain")
+                hz = find_local_horizon() or ""
+                return self._json(200, {"horizon": hz, "default_game": "26.3"})
+            return self._json(404, {"error": "not found"})
 
         def do_POST(self):
             u = urlparse(self.path)
@@ -95,32 +124,84 @@ def make_handler(app: App, port: int):
                 if n > MAX_UPLOAD:
                     return self._json(413, {"error": "file too large"})
                 body = self.rfile.read(n)
+
                 if u.path == "/api/upload":
                     q = parse_qs(u.query)
                     kind = q.get("kind", [""])[0]
                     if kind not in ("jar", "map"):
                         return self._json(400, {"error": "bad kind"})
                     return self._json(200, {"id": app.save(kind, q.get("name", [""])[0], body)})
-                req = json.loads(body or b"{}")
+
+                req = json.loads(body.decode("utf-8") if body else "{}")
+
+                if u.path == "/api/test_ai":
+                    key = (req.get("key") or "").strip()
+                    base = (req.get("base") or "https://integrate.api.nvidia.com/v1").strip().rstrip("/")
+                    if not key:
+                        return self._json(400, {"error": "API key is required."})
+                    import urllib.request, urllib.error
+                    url = f"{base}/models"
+                    try:
+                        r = urllib.request.Request(url, headers={
+                            "Authorization": f"Bearer {key}",
+                            "User-Agent": "Fabrizon/1.0",
+                        })
+                        with urllib.request.urlopen(r, timeout=10) as resp:
+                            data = json.loads(resp.read().decode())
+                            models = [m.get("id") for m in data.get("data", []) if isinstance(m, dict)]
+                            return self._json(200, {
+                                "ok": True,
+                                "message": f"Connected OK! Endpoint returned {len(models)} models.",
+                                "models": models[:10],
+                            })
+                    except urllib.error.HTTPError as e:
+                        err_msg = f"HTTP {e.code}: {e.reason}"
+                        try:
+                            body_err = json.loads(e.read().decode())
+                            if "error" in body_err and isinstance(body_err["error"], dict):
+                                err_msg = body_err["error"].get("message", err_msg)
+                            elif "error" in body_err:
+                                err_msg = str(body_err["error"])
+                        except Exception:
+                            pass
+                        return self._json(400, {"error": f"API test failed: {err_msg}"})
+                    except Exception as e:
+                        return self._json(400, {"error": f"Connection failed: {e}"})
+
                 if u.path == "/api/analyze":
                     rep = analyze(read_jar(app.path(req.get("id"))))
                     return self._json(200, rep.to_dict())
+
                 if u.path == "/api/resolve":
                     rep = analyze(read_jar(app.path(req.get("id"))))
                     maps = load_tiny(app.path(req["map_id"])) if req.get("map_id") else None
-                    hz = (req.get("horizon") or "").strip().strip('"')
+                    if maps is None:
+                        try:
+                            from .mappings import ensure_mappings
+                            mc_v = rep.manifest.get("depends", {}).get("minecraft")
+                            _, maps = ensure_mappings(mc_v)
+                        except Exception:
+                            maps = None
+                    hz = (req.get("horizon") or "").strip().strip('"') or (find_local_horizon() or "")
                     if hz and not os.path.isdir(hz):
                         return self._json(400, {"error": f"Horizon folder not found: {hz}"})
                     fns = index_tree(hz) if hz else []
                     rs = resolve(rep, fns, maps, req.get("to") or "named")
                     return self._json(200, [r.to_dict() for r in rs])
+
                 if u.path == "/api/generate":
                     rep = analyze(read_jar(app.path(req.get("id"))))
                     maps = load_tiny(app.path(req["map_id"])) if req.get("map_id") else None
-                    hz = (req.get("horizon") or "").strip().strip('"')
-                    if not hz or not os.path.isdir(hz):
-                        return self._json(400, {"error": "Set a valid Horizon source folder first."})
-                    rs = resolve(rep, index_tree(hz), maps, req.get("to") or "named")
+                    if maps is None:
+                        try:
+                            from .mappings import ensure_mappings
+                            mc_v = rep.manifest.get("depends", {}).get("minecraft")
+                            _, maps = ensure_mappings(mc_v)
+                        except Exception:
+                            maps = None
+                    hz = (req.get("horizon") or "").strip().strip('"') or (find_local_horizon() or "")
+                    fns = index_tree(hz) if hz and os.path.isdir(hz) else []
+                    rs = resolve(rep, fns, maps, req.get("to") or "named")
                     
                     # Build AI config if provided
                     ai_config = None
@@ -159,7 +240,8 @@ def make_handler(app: App, port: int):
                         try:
                             from .package import package_bundle, build_compatibility
                             compat = build_compatibility(
-                                hz, game=req.get("game") or "26.3",
+                                hz if hz and os.path.isdir(hz) else None,
+                                game=req.get("game") or "26.3",
                                 horizon_revision=(req.get("revision") or "").strip() or None,
                                 mixins_revision=(req.get("mixins_revision") or "").strip() or None,
                             )

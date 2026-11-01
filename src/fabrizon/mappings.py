@@ -7,6 +7,7 @@ so they can be matched against Horizon's Rust source.
 from __future__ import annotations
 
 import gzip
+import os
 from dataclasses import dataclass, field
 
 
@@ -144,3 +145,79 @@ def load_tiny(path: str) -> Mappings:
             return parse_tiny(f.read())
     with open(path, encoding="utf-8") as f:
         return parse_tiny(f.read())
+
+
+def get_cached_mappings_dir() -> str:
+    path = os.path.join(os.path.expanduser("~"), ".fabrizon", "mappings")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def extract_mc_version(ver: str | None) -> str:
+    if not ver:
+        return "26.3"
+    import re
+    m = re.search(r"(\d+(?:\.\d+)+)", str(ver))
+    return m.group(1) if m else "26.3"
+
+
+def ensure_mappings(mc_version: str | None = None) -> tuple[str, Mappings]:
+    """Auto-detect, download or retrieve cached Yarn mappings for a Minecraft version.
+    Returns (source_description, Mappings).
+    """
+    import io
+    import json
+    import os
+    import urllib.request
+    import zipfile
+
+    ver = extract_mc_version(mc_version)
+    cache_dir = get_cached_mappings_dir()
+
+    # 1. Check exact version cached
+    v_path = os.path.join(cache_dir, f"yarn-{ver}.tiny")
+    if os.path.isfile(v_path):
+        return (f"cached {os.path.basename(v_path)}", load_tiny(v_path))
+
+    # 2. Check local fallback paths (e.g. temp from previous session or default)
+    temp_tiny = r"C:\Users\sesed\AppData\Local\Temp\opencode\hz\yarn.tiny"
+    if os.path.isfile(temp_tiny):
+        try:
+            m = load_tiny(temp_tiny)
+            try:
+                import shutil
+                shutil.copyfile(temp_tiny, v_path)
+            except Exception:
+                pass
+            return ("local yarn.tiny", m)
+        except Exception:
+            pass
+
+    # 3. Check any existing cached .tiny in cache_dir
+    cached_files = [os.path.join(cache_dir, f) for f in os.listdir(cache_dir) if f.endswith(".tiny")]
+    if cached_files:
+        return (f"cached {os.path.basename(cached_files[0])}", load_tiny(cached_files[0]))
+
+    # 4. Try downloading from Fabric Meta API
+    for try_ver in (ver, "1.21"):
+        try:
+            req = urllib.request.Request(
+                f"https://meta.fabricmc.net/v2/versions/yarn/{try_ver}",
+                headers={"User-Agent": "Fabrizon/1.0"}
+            )
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                data = json.loads(resp.read().decode())
+                if data and isinstance(data, list) and "version" in data[0]:
+                    yarn_v = data[0]["version"]
+                    jar_url = f"https://maven.fabricmc.net/net/fabricmc/yarn/{yarn_v}/yarn-{yarn_v}-v2.jar"
+                    jreq = urllib.request.Request(jar_url, headers={"User-Agent": "Fabrizon/1.0"})
+                    with urllib.request.urlopen(jreq, timeout=12) as jresp:
+                        with zipfile.ZipFile(io.BytesIO(jresp.read())) as jzf:
+                            tiny_content = jzf.read("mappings/mappings.tiny").decode("utf-8")
+                            with open(v_path, "w", encoding="utf-8") as out:
+                                out.write(tiny_content)
+                            return (f"Yarn {yarn_v} (downloaded)", parse_tiny(tiny_content))
+        except Exception:
+            pass
+
+    raise MappingError(f"could not automatically download or locate Yarn mappings for Minecraft {ver}. Please specify a mappings file.")
